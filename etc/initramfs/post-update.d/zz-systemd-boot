@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+KERNEL_VERSION="$1"
+INITRD="$2"
+
+# The Debian kernel handbook suggests we do nothing if 
+# $DPKG_MAINTSCRIPT_PACKAGE begins with linux-image- to
+# avoid unnecessary updates
+if [[ ${DPKG_MAINTSCRIPT_PACKAGE} == linux-image-* ]]; then
+    exit 0
+fi
+
+# The installer is provided by the Debian systemd package
+INSTALLER="/usr/lib/kernel/install.d/85-initrd.install"
+
+if [[ ! -f "${INSTALLER}" ]]; then
+    echo >&2 "W: systemd-boot initrd update: ${INSTALLER} does not exist!"
+    exit 2
+fi
+
+if [[ ! -x "${INSTALLER}" ]]; then
+    echo >&2 "W: systemd-boot initrd update: ${INSTALLER} is not executable!"
+    exit 2
+fi
+
+# passing the kernel version is required
+if [[ -z "${KERNEL_VERSION}" ]]; then
+    echo >&2 "W: systemd-boot initrd update: did not pass a version number"
+    exit 2
+fi
+
+# The following two if-fi blocks are lifted from systemd's kernel-install to
+# build ENTRY_DIR_ABS as it is required by 85-initrd.install
+
+# Reuse directory created without a machine ID present if it exists.
+if [[ -d /efi/Default ]] || [[ -d /boot/Default ]] || [[ -d /boot/efi/Default ]]; then
+    MACHINE_ID="Default"
+elif [[ -f /etc/machine-id ]]; then
+    read MACHINE_ID < /etc/machine-id
+else
+    MACHINE_ID="Default"
+fi
+
+# Determine appropriate directory to install initrd into
+if [[ -d /efi/loader/entries ]] || [[ -d /efi/$MACHINE_ID ]]; then
+    ENTRY_DIR_ABS="/efi/$MACHINE_ID/$KERNEL_VERSION"
+elif [[ -d /boot/loader/entries ]] || [[ -d /boot/$MACHINE_ID ]]; then
+    ENTRY_DIR_ABS="/boot/$MACHINE_ID/$KERNEL_VERSION"
+elif [[ -d /boot/efi/loader/entries ]] || [[ -d /boot/efi/$MACHINE_ID ]]; then
+    ENTRY_DIR_ABS="/boot/efi/$MACHINE_ID/$KERNEL_VERSION"
+elif mountpoint -q /efi; then
+    ENTRY_DIR_ABS="/efi/$MACHINE_ID/$KERNEL_VERSION"
+elif mountpoint -q /boot/efi; then
+    ENTRY_DIR_ABS="/boot/efi/$MACHINE_ID/$KERNEL_VERSION"
+else
+    ENTRY_DIR_ABS="/boot/$MACHINE_ID/$KERNEL_VERSION"
+fi
+
+# install initrd for systemd-boot
+KERNEL_INSTALL_VERBOSE=1
+export KERNEL_INSTALL_VERBOSE
+"${INSTALLER}" add "${KERNEL_VERSION}" "${ENTRY_DIR_ABS}" >&2
+exit $?

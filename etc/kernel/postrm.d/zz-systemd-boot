@@ -1,0 +1,16 @@
+#!/bin/sh -e
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+KERNEL_VERSION="$1"
+
+command -v kernel-install >/dev/null 2>&1 || exit 0
+
+# passing the kernel version is required
+if [ -z "${KERNEL_VERSION}" ]; then
+    echo >&2 "W: systemd-boot kernel-install: ${DPKG_MAINTSCRIPT_PACKAGE:-kernel package} did not pass a version number"
+    exit 0
+fi
+
+# remove kernel for systemd-boot
+echo "+kernel-install -v remove ${KERNEL_VERSION}"
+kernel-install -v remove "${KERNEL_VERSION}" >&2

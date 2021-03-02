@@ -1,0 +1,32 @@
+#!/bin/sh -e
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+KERNEL_VERSION="$1"
+KERNEL_IMAGE="$2"
+
+command -v kernel-install >/dev/null 2>&1 || exit 0
+
+# passing the kernel version is required
+if [ -z "${KERNEL_VERSION}" ]; then
+    echo >&2 "W: systemd-boot kernel-install: ${DPKG_MAINTSCRIPT_PACKAGE:-kernel package} did not pass a version number"
+    exit 2
+fi
+
+# a kernel image is required by kernel-image
+if [ -z "${KERNEL_IMAGE}" ]; then
+    # if one isn't passed, according to the Debian kernel handbook the path 
+    # should be either /boot/vmlinuz-version or /boot/vmlinux-version, 
+    # according to architecture convention
+    if [ -f "/boot/vmlinuz-${KERNEL_VERSION}" ]; then
+        KERNEL_IMAGE="/boot/vmlinuz-${KERNEL_VERSION}"
+    elif [ -f "/boot/vmlinux-${KERNEL_VERSION}" ]; then
+        KERNEL_IMAGE="/boot/vmlinux-${KERNEL_VERSION}"
+    else
+        echo >&2 "W: systemd-boot kernel-install: ${DPKG_MAINTSCRIPT_PACKAGE:-kernel package} did not pass a kernel image"
+        exit 2
+    fi
+fi
+
+# install kernel for systemd-boot
+echo "+kernel-image -v add ${KERNEL_VERSION} ${KERNEL_IMAGE}"
+kernel-install -v add "${KERNEL_VERSION}" "${KERNEL_IMAGE}" >&2
