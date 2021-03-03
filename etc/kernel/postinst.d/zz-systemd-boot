@@ -12,7 +12,7 @@ if [ -z "${KERNEL_VERSION}" ]; then
     exit 2
 fi
 
-# a kernel image is required by kernel-image
+# a kernel image is required by kernel-install
 if [ -z "${KERNEL_IMAGE}" ]; then
     # if one isn't passed, according to the Debian kernel handbook the path 
     # should be either /boot/vmlinuz-version or /boot/vmlinux-version, 
@@ -28,5 +28,5 @@ if [ -z "${KERNEL_IMAGE}" ]; then
 fi
 
 # install kernel for systemd-boot
-echo "+kernel-image -v add ${KERNEL_VERSION} ${KERNEL_IMAGE}"
+echo "+kernel-install -v add ${KERNEL_VERSION} ${KERNEL_IMAGE}"
 kernel-install -v add "${KERNEL_VERSION}" "${KERNEL_IMAGE}" >&2
