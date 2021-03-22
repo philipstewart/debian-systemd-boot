@@ -1,6 +1,0 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# Register hook(s) as described in APT's JSON hooks documentation:
-# https://salsa.debian.org/apt-team/apt/-/blob/3a7aecd232dfdbcec5dbdc3af16e03479d47d917/doc/json-hooks-protocol.md#hook-notification
-
-Binary::apt::AptCli::Hooks::Install:: "/etc/apt/hooks.d/systemd-boot-update";
