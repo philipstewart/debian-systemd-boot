@@ -37,7 +37,7 @@ fi
 if [[ -d /efi/Default ]] || [[ -d /boot/Default ]] || [[ -d /boot/efi/Default ]]; then
     MACHINE_ID="Default"
 elif [[ -f /etc/machine-id ]]; then
-    read MACHINE_ID < /etc/machine-id
+    read -r MACHINE_ID < /etc/machine-id
 else
     MACHINE_ID="Default"
 fi
